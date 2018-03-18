@@ -15,9 +15,9 @@ const color_t BLACK  = 0x000000;
 const color_t GREEN  = 0xff0000;
 const color_t RED    = 0x00ff00;
 const color_t BLUE   = 0x0000ff;
-const color_t YELLOW = 0xff00ff;
-const color_t CYAN   = 0x800080;
-const color_t PURPLE = 0x008080;
+const color_t PURPLE = 0x00ffff;
+const color_t CYAN   = 0xff00ff;
+const color_t YELLOW = 0xffff00;
 
 #define PIN 5
 #define NUM_LEDS 140
@@ -77,13 +77,113 @@ color_t Wheel(byte WheelPos) {
 void rainbow() {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
     strip.setPixelColor(i, Wheel(i+frameCounter) );
+    //Serial.println( String(frameCounter) + " " + String(Wheel(i+frameCounter)) );
   }
+}
+
+void rainbowCrawl() {
+    int pixel = frameCounter % NUM_LEDS;
+    strip.setPixelColor(pixel, Wheel(frameCounter) );
+    //Serial.println( String(pixel) + " " + String(Wheel(frameCounter)) );
 }
 
 void set_all( color_t color ) {
   for( uint16_t i=0; i <strip.numPixels(); i++) {
     strip.setPixelColor(i, color);
   }
+}
+
+// http://eduardofv.com/read_post/179-Arduino-RGB-LED-HSV-Color-Wheel-
+ void HSBToRGB(
+    unsigned int inHue, unsigned int inSaturation, unsigned int inBrightness,
+    unsigned int *oR, unsigned int *oG, unsigned int *oB )
+{
+    if (inSaturation == 0) {
+        // achromatic (grey)
+        *oR = *oG = *oB = inBrightness;
+    } else {
+        unsigned int scaledHue = (inHue * 6);
+        unsigned int sector = scaledHue >> 8; // sector 0 to 5 around the color wheel
+        unsigned int offsetInSector = scaledHue - (sector << 8);  // position within the sector         
+        unsigned int p = (inBrightness * ( 255 - inSaturation )) >> 8;
+        unsigned int q = (inBrightness * ( 255 - ((inSaturation * offsetInSector) >> 8) )) >> 8;
+        unsigned int t = (inBrightness * ( 255 - ((inSaturation * ( 255 - offsetInSector )) >> 8) )) >> 8;
+ 
+        switch( sector ) {
+        case 0:
+            *oR = inBrightness;
+            *oG = t;
+            *oB = p;
+            break;
+        case 1:
+            *oR = q;
+            *oG = inBrightness;
+            *oB = p;
+            break;
+        case 2:
+            *oR = p;
+            *oG = inBrightness;
+            *oB = t;
+            break;
+        case 3:
+            *oR = p;
+            *oG = q;
+            *oB = inBrightness;
+            break;
+        case 4:
+            *oR = t;
+            *oG = p;
+            *oB = inBrightness;
+            break;
+        default:    // case 5:
+            *oR = inBrightness;
+            *oG = p;
+            *oB = q;
+            break;
+        }
+    }
+}// END HSBToRGB
+
+void newRainBow()  
+{
+  unsigned int r, g, b;
+  frameCounter++;
+  int hue = frameCounter % 255;
+  
+  for( uint16_t i = 0; i < NUM_LEDS; i++) {
+  // red is blue
+    HSBToRGB( (hue + i)%255, 255, 128, &r, &g, &b);
+    strip.setPixelColor( i, g, b, r );
+  }
+  strip.show();
+  delay(wait);
+}
+
+void notSureButCool()  
+{
+  unsigned int r, g, b;
+  frameCounter++;
+  int hue = frameCounter % 255;
+  
+  for( uint16_t i = 0; i < NUM_LEDS; i++) {
+  // red is blue
+    HSBToRGB(hue + i, 255, 128, &r, &g, &b);
+    strip.setPixelColor( i, g, b, r );
+  }
+  
+  Serial.print(" bright=");
+  Serial.print(64);
+  Serial.print(" hue=");
+  Serial.print(hue);
+  Serial.print(" red=");
+  Serial.print(r);
+  Serial.print(" green=");
+  Serial.print(g);
+  Serial.print(" blue=");
+  Serial.print(b);
+  Serial.println("");
+  strip.show();
+  delay(wait);
 }
 
 void lines() {
@@ -113,8 +213,40 @@ void lines() {
       // get the next point upward or downward
       n[i] = ball[n[i]][element];
     }
-    strip.show();
-    delay(wait);
+//    strip.show();
+//    delay(wait);
+  }
+}
+
+void linesWhite() {
+  static bool oddEven = false;
+  oddEven = !oddEven;
+  set_all( BLACK );
+  uint16_t startPoint;
+  if ( oddEven )
+    startPoint = 140;
+  else 
+    startPoint = 141;
+
+  path_t n;
+  for ( unsigned int index = 0; index < sizeof(path_t); index++ ) {
+    n[index] = ball[startPoint][index];
+  }
+
+  for (int j = 0; j < 9; j++ ) {
+    for (int i = 0; i < 5; ++i) {
+      strip.setPixelColor(n[i], WHITE );
+      uint8_t element = 0;
+      if ( oddEven )
+        element = 3;
+      else  
+        element = 0;
+        
+      // get the next point upward or downward
+      n[i] = ball[n[i]][element];
+    }
+//    strip.show();
+//    delay(wait);
   }
 }
 
@@ -171,8 +303,16 @@ String readDataFromSerial1() {
   return message;  
 }
 
+String readDataFromSerial() {
+  String message = "";
+  while ( 0 < Serial.available() ) {  
+    message += char( Serial.read() );
+  }
+  return message;  
+}
+
 void initializeBlueTooth() {
-  const int delayTime = 500;
+  const int delayTime = 250;
   Serial1.println("AT");
   delay( delayTime );
   Serial.println(("AT response: " + readDataFromSerial1()).c_str());
@@ -189,7 +329,7 @@ void initializeBlueTooth() {
   delay( delayTime );
   Serial.println(("AT+NAME response: " + readDataFromSerial1()).c_str());
   
-  Serial1.println("AT+NAME:GeoBall");
+  Serial1.println("AT+NAME:GeoBall1");
   delay( delayTime );
   Serial.println(("AT+NAME(Set) response: " + readDataFromSerial1()).c_str());
   
@@ -197,25 +337,13 @@ void initializeBlueTooth() {
   delay( delayTime );
   Serial.println(("AT+NAME response: " + readDataFromSerial1()).c_str());
 
-  Serial1.println("AT+PIN");
-  delay( delayTime );
-  Serial.println(("AT+PIN response: " + readDataFromSerial1()).c_str());
-  
-  Serial1.println("AT+PIN:1234");
-  delay( delayTime );
-  Serial.println(("AT+PIN(Set) response: " + readDataFromSerial1()).c_str());
-}
-
-void setup() {
-  // put your setup code here, to run once:
-  strip.begin();
-  strip.setBrightness( 32 );
-  Serial.begin(9600);
-  Serial1.begin(9600);
-  Serial.println("<Arduino Mega Initilized>");
-  set_all( GREEN );
-  frameCounter = 0;
-  initializeBlueTooth();
+//  Serial1.println("AT+PSWD:");
+//  delay( delayTime );
+//  Serial.println(("AT+PSWD: " + readDataFromSerial1()).c_str());
+//  
+//  Serial1.println('AT+PSWD:"0000"');
+//  delay( delayTime );
+//  Serial.println(("AT+PSWD(Set) response: " + readDataFromSerial1()).c_str());
 }
 
 vector<string> split(const char *str, char c = ' ') {
@@ -355,13 +483,62 @@ void eyeOfSuron() {
   strip.show();
 }
 
+void triColor( int range, triangleTB* triangleToUse, color_t color ) {
+  for ( uint8_t i = 0; i < range; i++ ){
+    path_t n;
+    for ( unsigned int index = 0; index < sizeof(path_t); index++ ) {
+      n[index] = (*triangleToUse)[i][index];
+    }
+    
+    for ( uint8_t j = 0; j < 6; j++ ){
+      if ( n[j] != 0xff )
+        strip.setPixelColor( n[j], color );
+    }
+  }
+}
+void triangleTry() {
+  linesWhite();
+  //int range = rand() % 6;
+  triColor( rand() % 6, &triangle1, RED );
+  triColor( rand() % 6, &triangle2, BLUE );
+  triColor( rand() % 6, &triangle3, GREEN );
+  triColor( rand() % 6, &triangle4, CYAN );
+  triColor( rand() % 6, &triangle5, PURPLE );
+}
+
+void lightsOut() {
+  set_all( BLACK );
+}
+
 void process_serial_data() {
   static String message = "";
-  message = readDataFromSerial1();
+  message = readDataFromSerial();
+  if ( 0 == message.length() )
+     message = readDataFromSerial1();
 
   if ( 0 < message.length() ) {
     Serial.println("process_serial_data - New data found message: " + message );
     auto results = split( message.c_str() );
+
+    if ( results[0] == "help" ){
+      Serial1.println("List of commands" );
+      Serial1.println("rain" );
+      Serial1.println("iring" );
+      Serial1.println("suron" );
+      Serial1.println("green" );
+      Serial1.println("red" );
+      Serial1.println("blue" );
+      Serial1.println("lines" );
+      Serial1.println("chaseLine" );
+      Serial1.println("chasing" );
+      Serial1.println("black");
+      Serial1.println("triangles");
+      Serial1.println("rain speed(number 1 - 5000 )" );
+      
+      Serial1.println("dim" );
+      Serial1.println("bright level(number 0 - 255)" );
+      resetFunctionPtrAndWait();
+    }
       
     if ( results[0] == "green" ){
       Serial1.println("Setting lights to GREEN" );
@@ -411,14 +588,24 @@ void process_serial_data() {
       fPtr = &ringInverse;
       wait = 50;
     }
-
+    else if ( results[0] == "black" ){
+      Serial1.println("Setting lights to lights out" );
+      resetFunctionPtrAndWait();
+      fPtr = &lightsOut;
+      wait = 5000;
+    }
+    else if ( results[0] == "triangle" ){
+      Serial1.println("Setting lights to triangles" );
+      resetFunctionPtrAndWait();
+      fPtr = &triangleTry;
+      wait = 5000;
+    }
     else if ( results[0] == "suron" ){
       Serial1.println("Setting lights to Eye Of Suron" );
       resetFunctionPtrAndWait();
       fPtr = &eyeOfSuron;
       wait = 1000;
     }
-
     else if ( results[0] == "rain" ){
       if ( 1 < results.size() ) {
         wait = atoi( results[1].c_str());
@@ -428,6 +615,16 @@ void process_serial_data() {
         Serial1.println( "Setting lights to Rainbow No speed set, default it slow" );
       }
       fPtr = &rainbow;
+    }
+    else if ( results[0] == "new" ){
+      if ( 1 < results.size() ) {
+        wait = atoi( results[1].c_str());
+        Serial1.println( ("Setting lights to new Rainbow with delay of " + results[1]).c_str() );
+      } else  {
+        wait = 1;
+        Serial1.println( "Setting lights to new Rainbow No speed set, default it slow" );
+      }
+      fPtr = &newRainBow;
     }
     else if ( results[0] == "dim" ){
       Serial1.println("Setting lights to dim" );
@@ -439,7 +636,7 @@ void process_serial_data() {
         Serial1.println( ("Brightness set to " + results[1]).c_str() );
       } else {
         strip.setBrightness( 192 );
-        Serial1.println("Brightness set default: 192" );
+        Serial1.println("Brightness set default: 64" );
       }
     }
   }
@@ -460,4 +657,23 @@ void loop() {
   frameCounter++;
   delay(wait); //delay
 }
+
+void setup() {
+  // put your setup code here, to run once:
+  strip.begin();
+  strip.setBrightness( 64 );
+  Serial.begin(9600);
+  Serial1.begin(9600);
+  Serial.println("<Arduino Mega Initilized>");
+  frameCounter = 0;
+  initializeBlueTooth();
+//  rainbow();
+//  fPtr = &rainbow;
+//  wait = 1;
+  triangleTry();
+  fPtr = &triangleTry;
+  wait = 100;
+}
+
+
     

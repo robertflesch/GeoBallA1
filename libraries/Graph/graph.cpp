@@ -154,3 +154,35 @@ const graph_t ball = {
 const uint8_t ringCenter[10] = { 52, 54, 57, 59, 62, 64, 67, 69, 72, 74 };
 const uint8_t ringCenterTop[20] = { 76, 77, 94, 78, 79, 80, 98, 81, 82, 83, 102, 84, 85 ,86 ,106 , 87, 88, 89, 90, 75 };
 const uint8_t ringCenterBottom[20] = { 51, 53, 33, 55, 56, 58, 37, 60, 61, 63, 41, 65, 66, 68, 45, 70 ,71 ,73 , 49, 50 };
+
+
+const triangleTB triangle1 =  { { 52, 0xff, 0xff, 0xff, 0xff },
+								{ 50, 51, 53, 75, 76, 77 },
+								{ 30, 31, 32, 91, 92, 93 },
+								{ 15, 16, 111, 112, 0xff, 0xff },
+								{ 5, 126, 0xff, 0xff, 0xff, 0xff },
+							 };
+const triangleTB triangle2 = {  { 57, 0xff, 0xff, 0xff, 0xff },
+								{ 55, 56, 58, 78, 79, 80 },
+								{ 34, 35, 36, 95, 96, 97 },
+								{ 18, 19, 114, 115, 0xff, 0xff },
+								{ 7, 128, 0xff, 0xff, 0xff, 0xff },
+                           };
+const triangleTB triangle3 = {  { 62, 0xff, 0xff, 0xff, 0xff },
+								{ 60, 61, 63, 81, 82, 83 },
+								{ 38, 39, 40, 99, 100, 101 },
+								{ 21, 22, 117, 118, 0xff, 0xff },
+								{ 9, 130, 0xff, 0xff, 0xff, 0xff },
+                           };
+const triangleTB triangle4 = {  { 67, 0xff, 0xff, 0xff, 0xff },
+								{ 65, 66, 68, 84, 85, 86 },
+								{ 42, 43, 44, 103, 104, 105 },
+								{ 24, 25, 120, 121, 0xff, 0xff },
+								{ 11, 132, 0xff, 0xff, 0xff, 0xff },
+                           };
+const triangleTB triangle5 = {  { 72, 0xff, 0xff, 0xff, 0xff },
+								{ 73, 71, 70, 87, 88, 89 },
+								{ 46, 47, 48, 107, 108, 109 },
+								{ 27, 28, 123, 124, 0xff, 0xff },
+								{ 13, 134, 0xff, 0xff, 0xff, 0xff },
+                           };
